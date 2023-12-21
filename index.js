@@ -13,7 +13,6 @@ const port = process.env.PORT || 5000;
 // app.use(cors());
 app.use(cors({
     origin: ["https://task-management-x.web.app", "http://localhost:5173", "http://localhost:5174"],
-    // origin: ["https://job-market-x.web.app"],
     credentials: true
 }));
 app.use(express.json());
@@ -118,12 +117,12 @@ async function run() {
                     res.send(result)
                 }
             } catch (error) {
-                console.log("error On /api/v1/AllJobs")
+                console.log("error On /api/v1/tasks")
                 console.log(error)
             }
         })
 
-        // // Get a Job Details Page // Dynamic route
+        // // Get a Task Details Page // Dynamic route
         app.get('/api/v1/tasks/:id', verifyToken, async (req, res) => {
             try {
                 const id = req.params.id;
@@ -140,7 +139,7 @@ async function run() {
                 res.send(result)
                 // }
             } catch (error) {
-                console.log("error On /api/v1/allJobs")
+                console.log("error On /api/v1/allTasks")
                 console.log(error)
             }
         })
@@ -149,7 +148,7 @@ async function run() {
         app.post('/api/v1/addTask', verifyToken, async (req, res) => {
             try {
                 const newTask = req.body;
-                // console.log(newJob)
+                // console.log(newTask)
                 const result = await tasksCollection.insertOne(newTask);
                 res.send(result)
             } catch (error) {
@@ -161,7 +160,7 @@ async function run() {
         
 
 
-        // Delete My Posted Job by ID
+        // Delete My Posted Task by ID
         app.delete('/api/v1/tasks/:id', verifyToken, async (req, res) => {
             try {
                 const id = req.params.id;
@@ -177,13 +176,12 @@ async function run() {
                 result = await tasksCollection.deleteOne(query);
                 res.send(result)
             } catch (error) {
-                console.log("error On Delete /api/v1/myPostedJobs")
+                console.log("error On Delete /api/v1/myPostedTasks")
                 console.log(error)
             }
         })
 
         
-
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
