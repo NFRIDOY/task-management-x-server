@@ -69,7 +69,120 @@ async function run() {
         const database = client.db("TaskManagementXDB");
         const tasksCollection = database.collection("Tasks")
 
+        // jwt
+        app.post("/api/v1/jwt", async (req, res) => {
+            try {
+                const user = req.body;
+                console.log(user)
+                const token = await jwt.sign(user, process.env.ACCESS_TOKEN_SECRET,
+                    {
+                        expiresIn: '1h'
+                    }
+                )
 
+                console.log("token", token)
+
+
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+
+                })
+                    .send({ message: 'true' })
+            } catch (error) {
+                console.log(error)
+            }
+        })
+
+        // Logout 
+
+        app.post('/api/v1/logout', async (req, res) => {
+            const user = req.body;
+            res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+        })
+
+        app.get('/api/v1/tasks', async (req, res) => {
+            try {
+
+                const queryCat = req.query.cat;
+                console.log(queryCat)
+                let query = {};
+                if (queryCat) {
+                    query = { category: queryCat };
+                    let result = await tasksCollection.find(query).toArray();
+                    res.send(result)
+                }
+                else {
+                    result = await tasksCollection.find(query).toArray();
+                    res.send(result)
+                }
+            } catch (error) {
+                console.log("error On /api/v1/AllJobs")
+                console.log(error)
+            }
+        })
+
+        // // Get a Job Details Page // Dynamic route
+        app.get('/api/v1/tasks/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                // const queryEmail = req.query.email;
+                // console.log(queryEmail)
+                let query = { _id: new ObjectId(id) };
+                // if (req.query.email) {
+                //     query = { email: {$ne: queryEmail} };
+                //     let result = await tasksCollection.find(query).toArray();
+                //     res.send(result)
+                // }
+                // else {
+                result = await tasksCollection.findOne(query);
+                res.send(result)
+                // }
+            } catch (error) {
+                console.log("error On /api/v1/allJobs")
+                console.log(error)
+            }
+        })
+
+        // http://localhost:5000/api/v1/addTask
+        app.post('/api/v1/addTask', verifyToken, async (req, res) => {
+            try {
+                const newTask = req.body;
+                // console.log(newJob)
+                const result = await tasksCollection.insertOne(newTask);
+                res.send(result)
+            } catch (error) {
+                console.log("error On /api/v1/newTask")
+                console.log(error)
+            }
+        })
+
+        
+
+
+        // Delete My Posted Job by ID
+        app.delete('/api/v1/tasks/:id', verifyToken, async (req, res) => {
+            try {
+                const id = req.params.id;
+                console.log(id)
+                // const queryEmail = req.query.email;
+                // console.log(queryEmail)
+                const queryEmail = req.query.email;
+                if (req.user.email !== queryEmail) {
+                    return res.status(403).send({ message: 'Forbiden Access' })
+                }
+                let query = { _id: new ObjectId(id) };
+
+                result = await tasksCollection.deleteOne(query);
+                res.send(result)
+            } catch (error) {
+                console.log("error On Delete /api/v1/myPostedJobs")
+                console.log(error)
+            }
+        })
+
+        
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
