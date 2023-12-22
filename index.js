@@ -104,18 +104,21 @@ async function run() {
         app.get('/api/v1/tasks', async (req, res) => {
             try {
 
-                const queryCat = req.query.cat;
-                console.log(queryCat)
+                const queryEmail = req.query.email;
+                console.log(queryEmail)
                 let query = {};
-                if (queryCat) {
-                    query = { category: queryCat };
-                    let result = await tasksCollection.find(query).toArray();
-                    res.send(result)
-                }
-                else {
-                    result = await tasksCollection.find(query).toArray();
-                    res.send(result)
-                }
+                query = { email: queryEmail };
+                let result = await tasksCollection.find(query).toArray();
+                res.send(result)
+                // if (queryEmail) {
+                //     query = { email: queryEmail };
+                //     let result = await tasksCollection.find(query).toArray();
+                //     res.send(result)
+                // }
+                // else {
+                //     result = await tasksCollection.find(query).toArray();
+                //     res.send(result)
+                // }
             } catch (error) {
                 console.log("error On /api/v1/tasks")
                 console.log(error)
@@ -156,8 +159,29 @@ async function run() {
                 console.log(error)
             }
         })
-
         
+        // Updata task
+        app.put('/api/v1/tasks/:id', async (req, res) => {
+            try {
+                const id = req.params.id;
+                const { status } = req.body;
+
+                const filter = { _id: new ObjectId(id) };
+                const options = { upsert: true };
+                Task = {
+                    $set: {
+                        status: status,
+                    }
+                };
+
+                result = await tasksCollection.updateOne(filter, Task, options);
+                res.send(result)
+            } catch (error) {
+                console.log("error On Update/PUT /api/v1/Tasks/:id")
+                console.log(error)
+            }
+        })
+
 
 
         // Delete My Posted Task by ID
@@ -181,7 +205,6 @@ async function run() {
             }
         })
 
-        
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
